@@ -10,7 +10,7 @@ import java.util.List;
 import java.util.Optional;
 
 @RestController
-@RequestMapping("/api/ads")
+@RequestMapping("v1/api/ads")
 public class Resource {
 
     @Autowired
