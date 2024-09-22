@@ -71,6 +71,3 @@ public class Resource {
         return ResponseEntity.notFound().build();
     }
 }
-
-
-
