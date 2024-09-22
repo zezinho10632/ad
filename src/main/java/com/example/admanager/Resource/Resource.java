@@ -61,6 +61,7 @@ public class Resource {
         }
         return ResponseEntity.notFound().build();
     }
+
     @GetMapping("/{id}/details")
     public ResponseEntity<Ad> getDetails(@PathVariable Long id) {
         Optional<Ad> ad = adService.getAdById(id);
