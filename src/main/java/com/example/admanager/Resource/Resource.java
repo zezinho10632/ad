@@ -1,13 +1,17 @@
 package com.example.admanager.Resource;
 
 import com.example.admanager.model.Ad;
+import com.example.admanager.dtos.AdRequestDTO;
+import com.example.admanager.dtos.AdResponseDTO;
 import com.example.admanager.service.AdService;
+import com.example.admanager.converter.AdConverter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("v1/api/ads")
@@ -17,24 +21,27 @@ public class Resource {
     private AdService adService;
 
     @PostMapping
-    public Ad createAd(@RequestBody Ad ad) {
-        return adService.createAd(ad);
+    public AdResponseDTO createAd(@RequestBody AdRequestDTO adRequestDTO) {
+        Ad ad = AdConverter.toDomain(adRequestDTO);
+        Ad createdAd = adService.createAd(ad);
+        return AdConverter.toDTO(createdAd);
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Ad> updateAd(@PathVariable Long id, @RequestBody Ad adDetails) {
+    public ResponseEntity<AdResponseDTO> updateAd(@PathVariable Long id, @RequestBody AdRequestDTO adRequestDTO) {
+        Ad adDetails = AdConverter.toDomain(adRequestDTO);
         Ad updatedAd = adService.updateAd(id, adDetails);
         if (updatedAd != null) {
-            return ResponseEntity.ok(updatedAd);
+            return ResponseEntity.ok(AdConverter.toDTO(updatedAd));
         }
         return ResponseEntity.notFound().build();
     }
 
     @PatchMapping("/{id}/author")
-    public ResponseEntity<Ad> updateAdAuthor(@PathVariable Long id, @RequestBody String author) {
+    public ResponseEntity<AdResponseDTO> updateAdAuthor(@PathVariable Long id, @RequestBody String author) {
         Ad updatedAd = adService.updateAdAuthor(id, author);
         if (updatedAd != null) {
-            return ResponseEntity.ok(updatedAd);
+            return ResponseEntity.ok(AdConverter.toDTO(updatedAd));
         }
         return ResponseEntity.notFound().build();
     }
@@ -46,27 +53,16 @@ public class Resource {
     }
 
     @GetMapping
-    public List<Ad> getAllAds(@RequestParam(required = false) String title) {
-        if (title != null) {
-            return adService.getAdsByTitle(title);
-        }
-        return adService.getAllAds();
+    public List<AdResponseDTO> getAllAds(@RequestParam(required = false) String title) {
+        List<Ad> ads = (title == null) ? adService.getAllAds() : adService.getAdsByTitle(title);
+        return ads.stream().map(AdConverter::toDTO).collect(Collectors.toList());
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Ad> getAdById(@PathVariable Long id) {
-        Optional<Ad> ad = adService.getAdById(id);
-        if (ad.isPresent()) {
-            return ResponseEntity.ok(ad.get());
-        }
-        return ResponseEntity.notFound().build();
-    }
-
-    @GetMapping("/{id}/detail")
-    public ResponseEntity<Ad> getDetails(@PathVariable Long id) {
-        Optional<Ad> ad = adService.getAdById(id);
-        if (ad.isPresent()) {
-            return ResponseEntity.ok(ad.get());
+    public ResponseEntity<AdResponseDTO> getAdById(@PathVariable Long id) {
+        Ad ad = adService.getAdById(id).orElse(null);
+        if (ad != null) {
+            return ResponseEntity.ok(AdConverter.toDTO(ad));
         }
         return ResponseEntity.notFound().build();
     }
